@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アラームアプリ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+            font-size: 28px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        input[type="time"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="time"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .status.active {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .time-display {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 18px;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔔 アラームアプリ</h1>
+
+        <div class="input-group">
+            <label for="alarmTime">アラーム時刻を設定</label>
+            <input type="time" id="alarmTime" required>
+        </div>
+
+        <button onclick="setAlarm()">アラームをセット</button>
+
+        <div class="status" id="status"></div>
+        <div class="time-display" id="timeDisplay"></div>
+    </div>
+
+    <script>
+        let alarmActive = false;
+        let alarmTime = null;
+
+        function updateTime() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            document.getElementById('timeDisplay').textContent = `現在時刻: ${hours}:${minutes}:${seconds}`;
+
+            if (alarmActive) {
+                const currentTime = `${hours}:${minutes}`;
+                if (currentTime === alarmTime) {
+                    triggerAlarm();
+                    alarmActive = false;
+                    document.getElementById('status').textContent = '';
+                    document.getElementById('status').classList.remove('active');
+                }
+            }
+        }
+
+        function setAlarm() {
+            const timeInput = document.getElementById('alarmTime').value;
+            if (!timeInput) {
+                alert('時刻を選択してください');
+                return;
+            }
+
+            alarmTime = timeInput;
+            alarmActive = true;
+
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = `✓ アラームを ${timeInput} に設定しました`;
+            statusEl.classList.add('active');
+        }
+
+        function triggerAlarm() {
+            alert('🔔 アラーム！');
+
+            // 音を再生
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    playBeep(audioContext);
+                }, i * 1000);
+            }
+        }
+
+        function playBeep(audioContext) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 1000;
+            oscillator.type = 'sine';
+
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // 時刻を1秒ごとに更新
+        setInterval(updateTime, 1000);
+        updateTime();
+    </script>
+</body>
+</html>
